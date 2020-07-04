@@ -1,0 +1,121 @@
+<Header (click)="closeModals()">
+
+  <nav class="navbar navbar-expand-lg navbar-dark transparent-light top">
+    <a class="navbar-brand" href="#">Asphalt Leader</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+      aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+        </li>
+        <li class="nav-item">
+        </li>
+      </ul>
+      <span class="navbar-text" *ngIf="!isLoggedIn">
+        <a class="nav-link" (click)="openLogin()">LOG IN <span class="sr-only"></span></a>
+      </span>
+      <button type="button" class="btn btn-outline-info" (click)="openSingup()">{{ isLoggedIn? "log out" : "SIGN UP"}}</button>
+    </div>
+  </nav>
+  
+</Header>
+
+<router-outlet (signUpEvent)="openSingup()" ></router-outlet>
+
+
+
+  <div id="modal-container">
+    <div id="login-modal" class="auth-modal">
+      <h2 class="mb-5"> Log In </h2>
+
+      <button (click)="loginClicked('facebook')" type="button" class="btn btn-primary login-btn mt-4">
+        <img src="../assets/logo-fb.jpg">
+        &nbsp;&nbsp; Log in using Facebook
+      </button>
+
+      <button (click)="loginClicked('strava')" type="button" class="btn btn-warning login-btn mt-3" id="strava-btn">
+        <img src="../assets/logo-strava.jpg">
+        &nbsp;&nbsp; Log in using Strava
+      </button>
+
+      <p class="m-5">Or log in with email</p>
+
+      <div class="input-group flex-nowrap mt-2">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="addon-wrapping">email</span>
+        </div>
+        <input [(ngModel)]="userData.email" type="text" class="form-control" placeholder="yourEmail@yahoo.com" aria-describedby="addon-wrapping">
+      </div>
+
+      <div class="input-group flex-nowrap mt-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="addon-wrapping">password</span>
+        </div>
+        <input [(ngModel)]="userData.password" type="password" class="form-control" placeholder="password" aria-describedby="addon-wrapping">
+      </div>
+
+      <div style="float: left;" class="mt-3">
+        <input [(ngModel)]="userData.rememberMe" type="checkbox" name="remember-me"> Remember me
+      </div> <br>
+
+      <button (click)="loginClicked('email')" type="button" 
+          class="btn btn-light mt-4 login-btn" style="color:black">Log in</button>
+
+      <div class="mt-3 text-red">
+          <em *ngFor="let error of errors"> {{error}} </em>
+      </div>
+
+      <a href=""> Forgot your password? </a>
+
+    </div>
+  </div>
+
+  <div id="signup-modal" class="auth-modal">
+
+
+    <h2 class="mb-5"> Sing Up </h2>
+
+    <button (click)="signupClicked('facebook')" type="button" class="btn btn-primary login-btn mt-4">
+      <img src="../assets/logo-fb.jpg">
+      &nbsp;&nbsp; Sign up with Facebook
+    </button>
+
+    <button (click)="signupClicked('strava')" type="button" class="btn btn-warning login-btn mt-3" id="strava-btn">
+      <img src="../assets/logo-strava.jpg">
+      &nbsp;&nbsp; Sign up with Strava
+    </button>
+
+    <p class="m-5">Or sign up with your email address</p>
+
+
+    <div class="input-group flex-nowrap mt-1">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="addon-wrapping">username</span>
+      </div>
+      <input [(ngModel)]="userData.username" type="text" class="form-control" placeholder="yourUsername" aria-describedby="addon-wrapping">
+    </div>
+
+    <div class="input-group flex-nowrap mt-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="addon-wrapping">email</span>
+      </div>
+      <input [(ngModel)]="userData.email" type="text" class="form-control" placeholder="yourEmail@yahoo.com" aria-describedby="addon-wrapping">
+    </div>
+
+    <div class="input-group flex-nowrap mt-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="addon-wrapping">password</span>
+      </div>
+      <input [(ngModel)]="userData.password" type="password" class="form-control" placeholder="password" aria-describedby="addon-wrapping">
+    </div>
+
+    <button (click)="signupClicked('email')" type="button" 
+        class="btn btn-light mt-5 mb-3 login-btn" style="color:black">Sign up</button>
+  
+    <div class="mt-3 text-red">
+        <em *ngFor="let error of errors"> * {{error}} <br></em>
+    </div>
+
+  </div>
