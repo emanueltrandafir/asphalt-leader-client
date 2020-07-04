@@ -21,31 +21,35 @@ export class AppComponent {
     rememberMe: false
   }
 
-  public isLoggedIn : boolean = false;
+  public isLoggedIn: boolean = false;
 
   constructor(private authService: AuthService,
     private router: Router,
-    private stravaOauth: StravaOauthService ){
+    private stravaOauth: StravaOauthService) {
 
-      let base64str = localStorage.getItem("credentials");
-      if(base64str != undefined){
-        let credentials = atob(base64str).split(":");
-        this.userData.email = credentials[0];
-        this.userData.password = credentials[1];
-        this.userData.rememberMe = true;
-      }
+    let base64str = localStorage.getItem("credentials");
+    if (base64str != undefined) {
+      let credentials = atob(base64str).split(":");
+      this.userData.email = credentials[0];
+      this.userData.password = credentials[1];
+      this.userData.rememberMe = true;
+    }
 
-      let location = window.location.href;
-      if( location.includes("code=")){
-        
-        this.stravaTokenExchange();
-      }
+    let location = window.location.href;
+    if (location.includes("code=")) {
+
+      this.stravaTokenExchange();
+    }
 
   }
 
 
-  public registerUser() {
-    this.authService.registerUser(this.userData)
+  public registerUserData() {
+    this.registerUser(this.userData);
+  }
+
+  public registerUser(user) {
+    this.authService.registerUser(user)
       .subscribe(
         res => {
           console.log(res);
@@ -53,27 +57,32 @@ export class AppComponent {
           this.openLogin();
           this.errors = [];
         },
-        err => this.errors = err.error
+        err => {
+          this.openSingup();
+          this.errors = err.error
+        } 
       )
   }
 
-  public loginUser(user){
+  public loginUser(user) {
 
-    if(user == undefined){
+    if (user == undefined) {
       user = this.userData;
     }
 
     this.authService.loginUser(user)
       .subscribe(
         res => {
-          console.log(res);
           this.closeModals();
           localStorage.setItem('token', res.token);
           this.isLoggedIn = true;
           this.errors = [];
           this.router.navigate(['/dashboard']);
         },
-        err => this.errors = [err.error] 
+        err => {
+          this.openLogin();
+          this.errors = [err.error];
+        }
       )
   }
 
@@ -85,7 +94,7 @@ export class AppComponent {
 
   openSingup() {
 
-    if(this.isLoggedIn){
+    if (this.isLoggedIn) {
       this.isLoggedIn = false;
       localStorage.removeItem('token');
       this.router.navigate(['/login']);
@@ -110,16 +119,17 @@ export class AppComponent {
     }
 
     if (type == "strava") {
+      localStorage.setItem('logging_in', 'true');
       this.stravaOauth.startOauthFlow();
       return;
     }
 
     if (type == "email") {
-    
-      this.validateForm();
-      if(this.errors.length > 0){ return; }
 
-      if(this.userData.rememberMe){
+      this.validateForm();
+      if (this.errors.length > 0) { return; }
+
+      if (this.userData.rememberMe) {
         let credentials = this.userData.email + ":" + this.userData.password;
         localStorage.setItem('credentials', btoa(credentials));
       }
@@ -137,71 +147,83 @@ export class AppComponent {
     }
 
     if (type == "strava") {
+      localStorage.setItem('logging_in', 'false');
       this.stravaOauth.startOauthFlow();
-      alert("not yet implemented!");
       return;
     }
 
     this.validateForm();
-    if(this.errors.length > 0){ return; }
+    if (this.errors.length > 0) { return; }
 
     if (type == "email") {
-      this.registerUser();
+      this.registerUserData();
       return;
     }
   }
 
 
-  validateForm(){
+  validateForm() {
 
     this.errors = [];
 
-    if(this.userData.email == undefined){
+    if (this.userData.email == undefined) {
       this.errors.push("the email address is required!");
-    
-    } else if( !this.userData.email.includes("@") ){
+
+    } else if (!this.userData.email.includes("@")) {
       this.errors.push("the email address is not valid!");
     }
 
-    if(this.userData.password == undefined){
+    if (this.userData.password == undefined) {
       this.errors.push("the password field is requred!");
 
     } else {
       let weakPassword = true;
-      "~!@#$%^&*_+}{?><".split("").forEach(chr => { if (this.userData.password.includes(chr)){ weakPassword = false } });
+      "~!@#$%^&*_+}{?><".split("").forEach(chr => { if (this.userData.password.includes(chr)) { weakPassword = false } });
 
-      if(weakPassword){
+      if (weakPassword) {
         this.errors.push("the password is too week include at least one of the special characters: ~, !, @, #, $, %, ^, &, *, _, +, }, {, ?, >, <")
       }
 
-      if(this.userData.password.length < 6){
+      if (this.userData.password.length < 6) {
         this.errors.push("the password is too short, it must have at least 6 characters");
       }
     }
 
   }
 
-  stravaTokenExchange(){
+  stravaTokenExchange() {
     this.stravaOauth.onOauthRedirect()
-    .subscribe(
-      res => {
+      .subscribe(
+        res => {
 
-        localStorage.setItem("stravaAccess", res.access_token);
-        localStorage.setItem("stravaRefresh", res.refresh_token);
-        
-        let name =res.athlete.username;
-        let email = name + "@strava";
-        let password = res.access_token;
+          localStorage.setItem("stravaAccess", res.access_token);
+          localStorage.setItem("stravaRefresh", res.refresh_token);
 
-        this.loginUser({
-          username:name,
-          email:email,
-          password:password
-        });
+          let name = res.athlete.username;
+          let email = name + "@strava";
+          let password = res.access_token;
 
-      },
-      err => console.log(err) 
-    )
+          let loggingIn = localStorage.getItem("logging_in") == 'true';
+          localStorage.removeItem("logging_in");
+
+          let user = {
+            username: name,
+            email: email,
+            password: password
+          };
+
+          if(loggingIn){
+            this.loginUser(user);
+          } else {
+            this.registerUser(user);
+          }
+
+        },
+        err => {
+          console.log("ERROR!!" , err);
+          localStorage.removeItem("logging_in");
+        }
+      )
   }
-   
+
 }
